@@ -1,0 +1,8 @@
+#torch
+#torchvision
+natsort
+numpy
+matplotlib
+scipy
+scikit-image
+imageio
