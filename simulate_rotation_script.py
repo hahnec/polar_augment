@@ -13,7 +13,7 @@ if __name__ == '__main__':
     plot_opt = False
     save_opt = True
     gray_opt = False
-    skip_opt = True
+    skip_opt = False
 
     # load measured rotation angles and center points
     with open(base_dir / 'angles_and_center_points.txt', 'r') as f:
@@ -45,8 +45,9 @@ if __name__ == '__main__':
         
         t = transforms[i]
         angle = angle + float(t[0]) if i > 0 else 0
-        result = rotate(F, angle=angle, center=t[1:].tolist())
-        F, m = result if not skip_opt else (result, rotate(pseudo_label, angle=angle, center=t[1:].tolist()))
+        center = t[1:].tolist()
+        result = rotate(F, angle=angle, center=center)
+        F, m = result if not skip_opt else (result, rotate(pseudo_label, angle=angle, center=center))
         if skip_opt: 
             # replace zeros with identity matrices
             F[16:32][:, F[16:32].sum(0) == 0] = torch.eye(4, dtype=F.dtype).flatten()[:, None, None].repeat(1, F.shape[1], F.shape[2])[:, F[16:32].sum(0) == 0]
