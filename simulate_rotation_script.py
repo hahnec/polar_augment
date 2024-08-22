@@ -1,5 +1,6 @@
-from pathlib import Path
 import torch
+from pathlib import Path
+import matplotlib.pyplot as plt
 
 from mm.models import MuellerMatrixModel
 from mm.utils.cod import read_cod_data_X3D
@@ -10,6 +11,7 @@ if __name__ == '__main__':
     base_dir = Path('/media/chris/EB62-383C/CC_Rotation/')
     plot_opt = False
     save_opt = True
+    gray_opt = False
 
     norm_uint8 = lambda x: ((x-x.min())/(x.max()-x.min()) * 255).astype(np.uint8)
 
@@ -48,7 +50,6 @@ if __name__ == '__main__':
 
         if i > 0:
             if plot_opt:
-                import matplotlib.pyplot as plt
                 fig, axs = plt.subplots(1, 3, figsize=(15, 8))
                 axs[0].imshow(y_ref.squeeze().numpy())
                 axs[0].set_title('Reference')
@@ -60,10 +61,15 @@ if __name__ == '__main__':
             if save_opt:
                 import numpy as np
                 import imageio
-                rgb = np.stack((y.squeeze().numpy(), y.squeeze().numpy(), y.squeeze().numpy()), axis=-1)
+                if gray_opt:
+                    rgb = np.stack((y.squeeze().numpy(), y.squeeze().numpy(), y.squeeze().numpy()), axis=-1)
+                else:
+                    # cyclic colormap for 180 degrees wrap-around
+                    cmap = plt.cm.twilight_shifted
+                    rgb = cmap((y/y.max()).squeeze().numpy())
                 rgb = norm_uint8(rgb)
                 alpha = norm_uint8(m.squeeze().numpy())
-                img = np.concatenate((rgb, alpha[..., None]), axis=-1)
+                img = np.concatenate((rgb[..., :3], alpha[..., None]), axis=-1)
                 imageio.imwrite(str(i).zfill(2)+'.png', img)
         else:
             y_ref = y.clone()
