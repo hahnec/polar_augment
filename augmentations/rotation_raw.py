@@ -67,8 +67,8 @@ class RandomPolarRotation(object):
         theta = deg / 180 * math.pi
         rmat = torch.tensor([
             [1, 0, 0, 0],
-            [0, +math.cos(2*theta), math.sin(2*theta), 0],
-            [0, -math.sin(2*theta), math.cos(2*theta), 0],
+            [0, math.cos(2*theta), -math.sin(2*theta), 0],
+            [0, math.sin(2*theta), +math.cos(2*theta), 0],
             [0, 0, 0, 1],
         ])
 
@@ -99,7 +99,7 @@ class RandomPolarRotation(object):
             A[zero_idcs] = torch.eye(4, dtype=A.dtype, device=A.device)
             W[zero_idcs] = torch.eye(4, dtype=W.dtype, device=W.device)
             # mueller matrix transformation: A_theta = (R_theta @ A_inv)_inv since R_theta @ M @ R_-theta = R_theta @ A_inv @ I @ W_inv @ R_-theta
-            R = self.get_rmat(angle*-1).to(A.dtype)
+            R = self.get_rmat(angle).to(A.dtype)
             A = torch.linalg.inv(R @ torch.linalg.inv(A))
             W = torch.linalg.inv(torch.linalg.inv(W) @ R.transpose(-2, -1))
             # HxWx4 to HxWx16 matrix reshaping

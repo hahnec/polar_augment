@@ -67,8 +67,8 @@ class RandomMuellerRotation(object):
         theta = deg / 180 * math.pi
         rmat = torch.tensor([
             [1, 0, 0, 0],
-            [0, +math.cos(2*theta), math.sin(2*theta), 0],
-            [0, -math.sin(2*theta), math.cos(2*theta), 0],
+            [0, math.cos(2*theta), -math.sin(2*theta), 0],
+            [0, math.sin(2*theta), +math.cos(2*theta), 0],
             [0, 0, 0, 1],
         ])
 
