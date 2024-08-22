@@ -74,7 +74,7 @@ class RandomPolarRotation(object):
 
         return rmat
 
-    def __call__(self, frame, label=None, transpose=True, angle=None, *args, **kwargs):
+    def __call__(self, frame, label=None, transpose=True, angle=None, center=None, *args, **kwargs):
         """
         Args:
             img (PIL Image): Image to be rotated.
@@ -86,6 +86,7 @@ class RandomPolarRotation(object):
         if random.random() < self.p:
             # spatial transformation
             angle = self.get_params(self.degrees) if angle is None else angle
+            self.center = self.center if center is None else center
             frame = F.rotate(frame, angle, self.resample, self.expand, self.center, self.fill).moveaxis(0, -1)
             # unravel matrices
             I, A, W = frame[..., :16], frame[..., 16:32], frame[..., 32:]

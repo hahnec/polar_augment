@@ -1,4 +1,5 @@
 import torch
+import torchvision
 from pathlib import Path
 import matplotlib.pyplot as plt
 
@@ -12,8 +13,7 @@ if __name__ == '__main__':
     plot_opt = False
     save_opt = True
     gray_opt = False
-
-    norm_uint8 = lambda x: ((x-x.min())/(x.max()-x.min()) * 255).astype(np.uint8)
+    skip_opt = True
 
     # load measured rotation angles and center points
     with open(base_dir / 'angles_and_center_points.txt', 'r') as f:
@@ -24,11 +24,13 @@ if __name__ == '__main__':
     calib_path = base_dir / '2021-10-21_C_2' / '550nm'
     A = read_cod_data_X3D(str(calib_path / '550_A.cod'))
     W = read_cod_data_X3D(str(calib_path / '550_W.cod'))
+    pseudo_label = torch.ones([1, A.shape[0], A.shape[1]]) # create pseudo label to generate a mask (e.g., for bg removal)
 
     # instantiate models
-    feat_keys = ['azimuth']
-    mm_model = MuellerMatrixModel(feature_keys=feat_keys, wnum=1)
+    mm_model = MuellerMatrixModel(feature_keys=['azimuth'], wnum=1)
     mueller_rotate = RandomPolarRotation(degrees=180, p=float('inf'))
+    rotate = lambda x, angle, center: mueller_rotate.__call__(x, angle=angle, center=center, label=pseudo_label, transpose=True)
+    if skip_opt: rotate = torchvision.transforms.functional.rotate
 
     # sort angle measurement folders
     from natsort import natsorted
@@ -43,9 +45,12 @@ if __name__ == '__main__':
         
         t = transforms[i]
         angle = angle + float(t[0]) if i > 0 else 0
-        mueller_rotate.center = t[1:].tolist()
-        pseudo_label = torch.ones_like(F[0][None]) # create pseudo label to generate a mask (e.g., for bg removal)
-        F, m = mueller_rotate(F, label=pseudo_label, angle=angle, transpose=True)
+        result = rotate(F, angle=angle, center=t[1:].tolist())
+        F, m = result if not skip_opt else (result, rotate(pseudo_label, angle=angle, center=t[1:].tolist()))
+        if skip_opt: 
+            # replace zeros with identity matrices
+            F[16:32][:, F[16:32].sum(0) == 0] = torch.eye(4, dtype=F.dtype).flatten()[:, None, None].repeat(1, F.shape[1], F.shape[2])[:, F[16:32].sum(0) == 0]
+            F[32:][:, F[32:].sum(0) == 0] = torch.eye(4, dtype=F.dtype).flatten()[:, None, None].repeat(1, F.shape[1], F.shape[2])[:, F[32:].sum(0) == 0]
         y = mm_model(F[None])
 
         if i > 0:
@@ -67,10 +72,12 @@ if __name__ == '__main__':
                     # cyclic colormap for 180 degrees wrap-around
                     cmap = plt.cm.twilight_shifted
                     rgb = cmap((y/y.max()).squeeze().numpy())
+                norm_uint8 = lambda x: ((x-x.min())/(x.max()-x.min()) * 255).astype(np.uint8) if (x.max()-x.min()) > 0 else (255*x).astype(np.uint8)
                 rgb = norm_uint8(rgb)
                 alpha = norm_uint8(m.squeeze().numpy())
                 img = np.concatenate((rgb[..., :3], alpha[..., None]), axis=-1)
-                imageio.imwrite(str(i).zfill(2)+'.png', img)
+                ext = ['_rect', '_wo'][skip_opt]
+                imageio.imwrite(str(i).zfill(2)+ext+'.png', img)
         else:
             y_ref = y.clone()
 
@@ -79,8 +86,8 @@ if __name__ == '__main__':
 
     if save_opt:
         frames = []
-        for fn in sorted(Path('.').glob('*.png')):
+        for fn in sorted(Path('.').glob('*'+ext+'.png')):
             print(fn.name)
             frames.append(imageio.v2.imread(fn))
-        imageio.mimsave('./docs/animation_with_alpha.gif', frames, duration=len(frames)//2, loop=0, disposal=2)
+        imageio.mimsave('./docs/animation_with_alpha'+ext+'.gif', frames, duration=len(frames)//2, loop=0, disposal=2)
         #imageio.mimsave('./docs/animation_with_alpha.webp', frames, format='WEBP', duration=len(frames)//2, quality=50, lossless=False)
