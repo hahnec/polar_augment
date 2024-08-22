@@ -8,4 +8,4 @@ This repository provides polarimetric image augmentations such as an [SO(2) rota
 
 | ![RotationAnimation](docs/animation_with_alpha_wo.gif) | ![RotationAnimation](docs/animation_with_alpha_rect.gif) |
 |:--------------------------:|:--------------------------:|
-| **spatial-only**          | **spatial+polarimetric**          |
+| **spatial-only**          | **spatial + polarimetric**          |
