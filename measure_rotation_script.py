@@ -20,8 +20,10 @@ for i, dir in enumerate(dir_list):
         ref = rimg[s:-s, s+c:-s-c]
         continue
     
+    p_start = [10., rimg.shape[1]/2, rimg.shape[0]/2]
+    #if i > 1: p_start[1], p_start[2] = p[1], p[2]
     xfun = lambda arg: object_fun(arg[0], arg[1], arg[2], x=filters.gaussian(rimg, sigma=3), ref=filters.gaussian(ref, sigma=3))
-    p = leastsq(xfun, [10., rimg.shape[1]/2, rimg.shape[0]/2])[0]
+    p = leastsq(xfun, p_start)[0]
     print(p)
 
     with open(base_dir / 'angles_and_center_points.txt', 'a') as f:

@@ -1,6 +1,8 @@
 import torch
 import torchvision
 from pathlib import Path
+import imageio
+import numpy as np
 import matplotlib.pyplot as plt
 
 from mm.models import MuellerMatrixModel
@@ -12,7 +14,6 @@ if __name__ == '__main__':
     base_dir = Path('/media/chris/EB62-383C/CC_Rotation/')
     plot_opt = False
     save_opt = True
-    gray_opt = False
     skip_opt = False
 
     # load measured rotation angles and center points
@@ -36,6 +37,10 @@ if __name__ == '__main__':
     from natsort import natsorted
     dir_list = natsorted([str(el) for el in base_dir.iterdir() if el.is_dir() and not str(el).__contains__('C_2')])
 
+    # cyclic colormap for 180 degrees wrap-around
+    cmap = plt.cm.twilight_shifted
+    norm_uint8 = lambda x: ((x-x.min())/(x.max()-x.min()) * 255).astype(np.uint8) if (x.max()-x.min()) > 0 else (255*x).astype(np.uint8)
+
     # iterate through angle measurements
     for i, dir in enumerate(dir_list):
         intensity = read_cod_data_X3D(Path(dir) / 'raw_data' / '550nm' / '550_Intensite.cod', raw_flag=True)
@@ -45,14 +50,14 @@ if __name__ == '__main__':
         
         t = transforms[i]
         angle = angle + float(t[0]) if i > 0 else 0
-        center = t[1:].tolist()
+        center = transforms.mean(0)[1:].tolist() #t[1:].tolist()
         result = rotate(F, angle=angle, center=center)
-        F, m = result if not skip_opt else (result, rotate(pseudo_label, angle=angle, center=center))
+        f, m = result if not skip_opt else (result, rotate(pseudo_label, angle=angle, center=center))
         if skip_opt: 
             # replace zeros with identity matrices
-            F[16:32][:, F[16:32].sum(0) == 0] = torch.eye(4, dtype=F.dtype).flatten()[:, None, None].repeat(1, F.shape[1], F.shape[2])[:, F[16:32].sum(0) == 0]
-            F[32:][:, F[32:].sum(0) == 0] = torch.eye(4, dtype=F.dtype).flatten()[:, None, None].repeat(1, F.shape[1], F.shape[2])[:, F[32:].sum(0) == 0]
-        y = mm_model(F[None])
+            f[16:32][:, f[16:32].sum(0) == 0] = torch.eye(4, dtype=f.dtype).flatten()[:, None, None].repeat(1, f.shape[1], f.shape[2])[:, f[16:32].sum(0) == 0]
+            f[32:][:, f[32:].sum(0) == 0] = torch.eye(4, dtype=f.dtype).flatten()[:, None, None].repeat(1, f.shape[1], f.shape[2])[:, f[32:].sum(0) == 0]
+        y = mm_model(f[None])
 
         if i > 0:
             if plot_opt:
@@ -65,27 +70,25 @@ if __name__ == '__main__':
                 axs[2].set_title('Current')
                 plt.show()
             if save_opt:
-                import numpy as np
-                import imageio
-                if gray_opt:
-                    rgb = np.stack((y.squeeze().numpy(), y.squeeze().numpy(), y.squeeze().numpy()), axis=-1)
-                else:
-                    # cyclic colormap for 180 degrees wrap-around
-                    cmap = plt.cm.twilight_shifted
-                    rgb = cmap((y/y.max()).squeeze().numpy())
-                norm_uint8 = lambda x: ((x-x.min())/(x.max()-x.min()) * 255).astype(np.uint8) if (x.max()-x.min()) > 0 else (255*x).astype(np.uint8)
+                rgb = cmap((y/y.max()).squeeze().numpy())
                 rgb = norm_uint8(rgb)
                 alpha = norm_uint8(m.squeeze().numpy())
                 img = np.concatenate((rgb[..., :3], alpha[..., None]), axis=-1)
                 ext = ['_rect', '_wo'][skip_opt]
-                imageio.imwrite(str(i).zfill(2)+ext+'.png', img)
+                imageio.imwrite('fig-'+str(i).zfill(2)+ext+'.png', img)
         else:
             y_ref = y.clone()
+
+        # unrotated
+        y_orig = mm_model(F[None])
+        y_orig = cmap((y_orig/y_orig.max()).squeeze().numpy())
+        imageio.imwrite('fig-'+str(i+1).zfill(2)+'_orig.png', norm_uint8(y_orig))
 
         m_previous = m.clone()
         y_previous = y.clone()
 
     if save_opt:
+        #ext = '_orig'
         frames = []
         for fn in sorted(Path('.').glob('*'+ext+'.png')):
             print(fn.name)
