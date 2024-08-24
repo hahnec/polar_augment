@@ -12,5 +12,5 @@ This repository provides polarimetric image augmentations such as an [SO(2) rota
 
 <br>
 <p align="center">
-  <img src="docs/color_bar.svg" alt="Colorbar" width="50%" />
+  <img src="docs/color_bar.svg" alt="Colorbar" width="25%" />
 </p>
