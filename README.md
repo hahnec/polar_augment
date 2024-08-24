@@ -9,3 +9,8 @@ This repository provides polarimetric image augmentations such as an [SO(2) rota
 | ![RotationAnimation](docs/animation_with_alpha_wo.gif) | ![RotationAnimation](docs/animation_with_alpha_rect.gif) |
 |:--------------------------:|:--------------------------:|
 | **spatial-only rotation** | **spatial + polarimetric rotation** |
+
+<br>
+<p align="center">
+  <img src="docs/color_bar.svg" alt="Colorbar" />
+</p>
