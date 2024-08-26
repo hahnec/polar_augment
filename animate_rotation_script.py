@@ -12,7 +12,7 @@ from augmentations.rotation_raw import RandomPolarRotation
 if __name__ == '__main__':
 
     base_dir = Path('/media/chris/EB62-383C/CC_Rotation/')
-    plot_opt = True
+    plot_opt = False
     save_opt = True
     skip_opt = False
 
@@ -42,18 +42,14 @@ if __name__ == '__main__':
     norm_uint8 = lambda x: ((x-x.min())/(x.max()-x.min()) * 255).astype(np.uint8) if (x.max()-x.min()) > 0 else (255*x).astype(np.uint8)
 
     # iterate through angle measurements
-    ys = []
     for i, dir in enumerate(dir_list):
         intensity = read_cod_data_X3D(Path(dir) / 'raw_data' / '550nm' / '550_Intensite.cod', raw_flag=True)
         bruit = read_cod_data_X3D(Path(dir) / 'raw_data' / '550nm' /'550_Bruit.cod', raw_flag=True)
         B = (intensity - bruit).moveaxis(-1, 0)
         F = torch.cat([B, A.moveaxis(-1, 0), W.moveaxis(-1, 0)], dim=0)
-
-        random_idx = np.random.randint(0, i) if i > 0 else 0
         
-        t = sum([transforms[i-idx][0] for idx in range(random_idx)]) if random_idx > 0 else transforms[i][0]
-        #angle = angle + float(t[0]) if i > 0 else 0
-        angle = float(t) if i > 0 else 0
+        t = transforms[i]
+        angle = angle + float(t[0]) if i > 0 else 0
         center = transforms.mean(0)[1:].tolist() #t[1:].tolist()
         result = rotate(F, angle=angle, center=center)
         f, m = result if not skip_opt else (result, rotate(pseudo_label, angle=angle, center=center))
@@ -62,32 +58,40 @@ if __name__ == '__main__':
             f[16:32][:, f[16:32].sum(0) == 0] = torch.eye(4, dtype=f.dtype).flatten()[:, None, None].repeat(1, f.shape[1], f.shape[2])[:, f[16:32].sum(0) == 0]
             f[32:][:, f[32:].sum(0) == 0] = torch.eye(4, dtype=f.dtype).flatten()[:, None, None].repeat(1, f.shape[1], f.shape[2])[:, f[32:].sum(0) == 0]
         y = mm_model(f[None])
-        y = cmap((y/y.max()).squeeze().numpy())
-
-        # unrotated
-        y_orig = mm_model(F[None])
-        y_orig = cmap((y_orig/y_orig.max()).squeeze().numpy())
-        imageio.imwrite('fig-'+str(i+1).zfill(2)+'_orig.png', norm_uint8(y_orig))
-        ys.append(y_orig)
 
         if i > 0:
             if plot_opt:
                 fig, axs = plt.subplots(1, 3, figsize=(15, 8))
-                axs[0].imshow(y_orig.squeeze())
-                axs[0].set_title('Input')
-                axs[1].imshow(y[..., :3], alpha=1-m.squeeze())
-                axs[1].set_title('Rotated')
-                axs[2].imshow(ys[-random_idx-1].squeeze())
-                axs[2].set_title('GT')
+                axs[0].imshow(y_ref.squeeze().numpy())
+                axs[0].set_title('Reference')
+                axs[1].imshow(y_previous.squeeze().numpy(), alpha=m_previous.squeeze().numpy())
+                axs[1].set_title('Previous')
+                axs[2].imshow(y.squeeze().numpy(), alpha=m.squeeze().numpy())
+                axs[2].set_title('Current')
                 plt.show()
             if save_opt:
-                rgb = norm_uint8(y)
+                rgb = cmap((y/y.max()).squeeze().numpy())
+                rgb = norm_uint8(rgb)
                 alpha = norm_uint8(m.squeeze().numpy())
                 img = np.concatenate((rgb[..., :3], alpha[..., None]), axis=-1)
                 ext = ['_rect', '_wo'][skip_opt]
                 imageio.imwrite('fig-'+str(i).zfill(2)+ext+'.png', img)
         else:
-            y_ref = y
+            y_ref = y.clone()
 
-        m_previous = m
-        y_previous = y
+        # unrotated
+        y_orig = mm_model(F[None])
+        y_orig = cmap((y_orig/y_orig.max()).squeeze().numpy())
+        imageio.imwrite('fig-'+str(i+1).zfill(2)+'_orig.png', norm_uint8(y_orig))
+
+        m_previous = m.clone()
+        y_previous = y.clone()
+
+    if save_opt:
+        #ext = '_orig'
+        frames = []
+        for fn in sorted(Path('.').glob('*'+ext+'.png')):
+            print(fn.name)
+            frames.append(imageio.v2.imread(fn))
+        imageio.mimsave('./docs/animation_with_alpha'+ext+'.gif', frames, duration=len(frames)//2, loop=0, disposal=2)
+        #imageio.mimsave('./docs/animation_with_alpha.webp', frames, format='WEBP', duration=len(frames)//2, quality=50, lossless=False)
