@@ -24,6 +24,9 @@ class RandomPolarRotation(object):
             Default is the center of the image.
         fill (3-tuple or int): RGB pixel fill value for area outside the rotated image.
             If int, it is used for all channels respectively.
+        p (float): probability threshold with which image should be rotated or left untreated instead.
+        any (bool): If false, only angles [90, 180, 270] will be chosen. Otherwise, a random angle 
+            within the boundaries will be generated (default).
 
     .. _filters: https://pillow.readthedocs.io/en/latest/handbook/concepts.html#filters
 
@@ -99,9 +102,9 @@ class RandomPolarRotation(object):
             A[zero_idcs] = torch.eye(4, dtype=A.dtype, device=A.device)
             W[zero_idcs] = torch.eye(4, dtype=W.dtype, device=W.device)
             # mueller matrix transformation: A_theta = (R_theta @ A_inv)_inv since R_theta @ M @ R_-theta = R_theta @ A_inv @ I @ W_inv @ R_-theta
-            R = self.get_rmat(angle).to(A.dtype)
-            A = torch.linalg.inv(R @ torch.linalg.inv(A))
-            W = torch.linalg.inv(torch.linalg.inv(W) @ R.transpose(-2, -1))
+            P = self.get_rmat(angle).to(A.dtype)
+            A = torch.linalg.inv(P @ torch.linalg.inv(A))
+            W = torch.linalg.inv(torch.linalg.inv(W) @ P.transpose(-2, -1))
             # HxWx4 to HxWx16 matrix reshaping
             if transpose: I, A, W = [el.transpose(-2, -1) for el in [I, A, W]]
             I, A, W = [el.flatten(-2, -1).moveaxis(-1, 0) for el in [I, A, W]]

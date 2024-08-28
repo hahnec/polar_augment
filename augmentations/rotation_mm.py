@@ -24,6 +24,9 @@ class RandomMuellerRotation(object):
             Default is the center of the image.
         fill (3-tuple or int): RGB pixel fill value for area outside the rotated image.
             If int, it is used for all channels respectively.
+        p (float): probability threshold with which image should be rotated or left untreated instead.
+        any (bool): If false, only angles [90, 180, 270] will be chosen. Otherwise, a random angle 
+            within the boundaries will be generated (default).
 
     .. _filters: https://pillow.readthedocs.io/en/latest/handbook/concepts.html#filters
 
@@ -90,8 +93,8 @@ class RandomMuellerRotation(object):
             rotated_img = F.rotate(img, angle, self.resample, self.expand, self.center, self.fill)
             rotated_img = rotated_img.permute(0, 2, 3, 1).unsqueeze(1)
             # mueller matrix transformation
-            rmat = self.get_rmat(angle)
-            rotated_img = rmat @ rotated_img.view(*rotated_img.shape[:-1], 4, 4) @ rmat.transpose(-2, -1)
+            P = self.get_rmat(angle)
+            rotated_img = P @ rotated_img.view(*rotated_img.shape[:-1], 4, 4) @ P.transpose(-2, -1)
             rotated_img = rotated_img.flatten(-2, -1)
             if label is not None:
                 label = label[:, 0].permute(0, 3, 1, 2)
