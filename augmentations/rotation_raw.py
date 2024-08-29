@@ -90,7 +90,7 @@ class RandomPolarRotation(object):
             # spatial transformation
             angle = self.get_params(self.degrees) if angle is None else angle
             self.center = self.center if center is None else center
-            frame = F.rotate(frame, angle, self.resample, self.expand, self.center, self.fill).moveaxis(0, -1)
+            frame = F.rotate(frame, angle, self.resample, self.expand, self.center, fill=0).moveaxis(0, -1)
             # unravel matrices
             I, A, W = frame[..., :16], frame[..., 16:32], frame[..., 32:]
             # HxWx16 to HxWx4x4 matrix reshaping
@@ -111,7 +111,7 @@ class RandomPolarRotation(object):
             # stack matrices together again
             rotated_frame = torch.cat([I, A, W], dim=0)
             if label is not None:
-                rotated_label = F.rotate(label, angle, self.resample, self.expand, self.center, self.fill)
+                rotated_label = F.rotate(label, angle, self.resample, self.expand, self.center, fill=self.fill)
                 return rotated_frame, rotated_label
             return rotated_frame
         else:
