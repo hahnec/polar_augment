@@ -53,7 +53,7 @@ class RandomPolarRotation(object):
         """Get parameters for ``rotate`` for a random rotation.
 
         Returns:
-            sequence: params to be passed to ``rotate`` for random rotation.
+            params to be passed to ``rotate`` for random rotation.
         """
         
         angle = random.uniform(degrees[0], degrees[1]) if self.any else random.choice([90, 180, 270])
@@ -65,7 +65,7 @@ class RandomPolarRotation(object):
         """Get rotation matrix for Mueller matrix.
 
         Returns:
-            sequence: rotation matrix for Mueller matrix.
+            rotation matrix for Mueller matrix.
         """
         theta = deg / 180 * math.pi
         rmat = torch.tensor([
