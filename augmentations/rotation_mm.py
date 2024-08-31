@@ -90,7 +90,8 @@ class RandomMuellerRotation(object):
             # spatial transformation
             angle = self.get_params(self.degrees) if angle is None else angle
             img = img[:, 0].permute(0, 3, 1, 2)
-            rotated_img = F.rotate(img, angle, self.resample, self.expand, self.center, 0)
+            fill48 = torch.stack([torch.eye(4) for _ in range(3)]).flatten().tolist()
+            rotated_img = F.rotate(img, angle, self.resample, self.expand, self.center, fill48)
             rotated_img = rotated_img.permute(0, 2, 3, 1).unsqueeze(1)
             # mueller matrix transformation
             P = self.get_rmat(angle)
