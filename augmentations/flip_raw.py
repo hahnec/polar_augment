@@ -27,25 +27,6 @@ class RandomPolarFlip(object):
             flip matrix for Mueller matrix.
         """
 
-        h = -1 if self.orientation in [0, 2] else 1
-        v = -1 if self.orientation in [1, 2] else 1
-
-        rmat = torch.tensor([
-            [1, 0, 0, 0],
-            [0, v, 0, 0],
-            [0, 0, h, 0],
-            [0, 0, 0, 1],
-        ])
-
-        return rmat
-
-    def get_fmat_heuristic(self):
-        """Get flip matrix for Mueller matrix.
-
-        Returns:
-            flip matrix for Mueller matrix.
-        """
-
         f = -1 if self.orientation in [0, 1] else 1
 
         rmat = torch.tensor([
@@ -53,26 +34,6 @@ class RandomPolarFlip(object):
             [0, f, 0, 0],
             [0, 0, 1, 0],
             [0, 0, 0, 1],
-        ])
-
-        return rmat
-
-    def get_fmat_omar(self):
-        """Get flip matrix for Mueller matrix.
-
-        Returns:
-            flip matrix for Mueller matrix.
-        """
-
-        h = -1 if self.orientation in [0, 2] else 1
-        v = -1 if self.orientation in [1, 2] else 1
-        b = -1 if self.orientation in [0, 1] else 1
-
-        rmat = torch.tensor([
-            [1, 0, 0, 0],
-            [0, h, 0, 0],
-            [0, 0, v, 0],
-            [0, 0, 0, b],
         ])
 
         return rmat
@@ -106,7 +67,7 @@ class RandomPolarFlip(object):
             A[zero_idcs] = torch.eye(4, dtype=A.dtype, device=A.device)
             W[zero_idcs] = torch.eye(4, dtype=W.dtype, device=W.device)
             # mueller matrix transformation: A_theta = (R_theta @ A_inv)_inv since R_theta @ M @ R_-theta = R_theta @ A_inv @ I @ W_inv @ R_-theta
-            P = self.get_fmat_heuristic().to(A.dtype)
+            P = self.get_fmat().to(A.dtype)
             A = torch.linalg.inv(P @ torch.linalg.inv(A))
             W = torch.linalg.inv(torch.linalg.inv(W) @ P.transpose(-2, -1))
             # HxWx4 to HxWx16 matrix reshaping
