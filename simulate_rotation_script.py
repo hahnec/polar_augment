@@ -30,7 +30,7 @@ if __name__ == '__main__':
     pseudo_label = torch.ones([1, A.shape[0], A.shape[1]]) # create pseudo label to generate a mask (e.g., for bg removal)
 
     # instantiate models
-    mm_model = MuellerMatrixModel(feature_keys=['azimuth'], wnum=1)
+    mm_model = MuellerMatrixModel(feature_keys=['azimuth', 'mask'], wnum=1)
     mueller_rotate = RandomPolarRotation(degrees=180, p=float('inf'))
     rotate = lambda x, angle, center: mueller_rotate.__call__(x, angle=angle, center=center, label=pseudo_label, transpose=True)
     if skip_opt: rotate = torchvision.transforms.functional.rotate
@@ -44,8 +44,7 @@ if __name__ == '__main__':
     norm_uint8 = lambda x: ((x-x.min())/(x.max()-x.min()) * 255).astype(np.uint8) if (x.max()-x.min()) > 0 else (255*x).astype(np.uint8)
 
     # iterate through angle measurements
-    ys = []
-    errs = []
+    ys, vs, errs = [], [], []
     for i, dir in enumerate(dir_list):
         intensity = read_cod_data_X3D(Path(dir) / 'raw_data' / '550nm' / '550_Intensite.cod', raw_flag=True)
         bruit = read_cod_data_X3D(Path(dir) / 'raw_data' / '550nm' /'550_Bruit.cod', raw_flag=True)
@@ -65,24 +64,30 @@ if __name__ == '__main__':
             f[16:32][:, f[16:32].sum(0) == 0] = torch.eye(4, dtype=f.dtype).flatten()[:, None, None].repeat(1, f.shape[1], f.shape[2])[:, f[16:32].sum(0) == 0]
             f[32:][:, f[32:].sum(0) == 0] = torch.eye(4, dtype=f.dtype).flatten()[:, None, None].repeat(1, f.shape[1], f.shape[2])[:, f[32:].sum(0) == 0]
         y = mm_model(f[None])
+        y, v = y[:, 0][:, None], y[:, 1][:, None]
         rgb = cmap((y/y.max()).squeeze().numpy())
 
         # unrotated
         y_orig = mm_model(F[None]).squeeze().numpy()
+        y_orig, v_orig = y_orig[0], y_orig[1]
         #y_orig = cmap((y_orig/y_orig.max()))
         ys.append(y_orig)
+        vs.append(v_orig)
 
         if i > 0 and random_idx > 0:
-            diff = (y.squeeze().numpy() - ys[-random_idx-1])/180*np.pi
-            errs.extend(diff[m.bool().squeeze().numpy()])
+            mask = (m*v*vs[-random_idx-1]).squeeze().numpy()
+            diff = mask * (y.squeeze().numpy() - ys[-random_idx-1]) #/180*np.pi
+            errs.extend(diff)
             if plot_opt:
-                fig, axs = plt.subplots(1, 3, figsize=(15, 8))
+                fig, axs = plt.subplots(1, 4, figsize=(15, 8))
                 axs[0].imshow(cmap(y_orig/y_orig.max()).squeeze())
                 axs[0].set_title('Input')
                 axs[1].imshow(rgb[..., :3], alpha=m.squeeze().numpy())
                 axs[1].set_title('Rotated')
                 axs[2].imshow(cmap(ys[-random_idx-1]/ys[-random_idx-1].max()))
                 axs[2].set_title('GT')
+                axs[3].imshow(mask)
+                axs[3].set_title('Mask')
                 plt.show()
             if save_opt:
                 rgb = norm_uint8(rgb)
