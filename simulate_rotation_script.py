@@ -12,7 +12,7 @@ from augmentations.rotation_raw import RandomPolarRotation
 if __name__ == '__main__':
 
     base_dir = Path('/media/chris/EB62-383C/CC_Rotation/')
-    plot_opt = False
+    plot_opt = True
     save_opt = True
     skip_opt = True
 
@@ -30,7 +30,7 @@ if __name__ == '__main__':
     pseudo_label = torch.ones([1, A.shape[0], A.shape[1]]) # create pseudo label to generate a mask (e.g., for bg removal)
 
     # instantiate models
-    mm_model = MuellerMatrixModel(feature_keys=['azimuth', 'mask'], wnum=1)
+    mm_model = MuellerMatrixModel(feature_keys=['azimuth', 'linr', 'mask'], wnum=1)
     mueller_rotate = RandomPolarRotation(degrees=180, p=float('inf'))
     rotate = lambda x, angle, center: mueller_rotate.__call__(x, angle=angle, center=center, label=pseudo_label, transpose=True)
     if skip_opt: rotate = torchvision.transforms.functional.rotate
@@ -44,7 +44,7 @@ if __name__ == '__main__':
     norm_uint8 = lambda x: ((x-x.min())/(x.max()-x.min()) * 255).astype(np.uint8) if (x.max()-x.min()) > 0 else (255*x).astype(np.uint8)
 
     # iterate through angle measurements
-    ys, vs, errs = [], [], []
+    ys, vs, ls, errs = [], [], [], []
     for i, dir in enumerate(dir_list):
         intensity = read_cod_data_X3D(Path(dir) / 'raw_data' / '550nm' / '550_Intensite.cod', raw_flag=True)
         bruit = read_cod_data_X3D(Path(dir) / 'raw_data' / '550nm' /'550_Bruit.cod', raw_flag=True)
@@ -64,19 +64,23 @@ if __name__ == '__main__':
             f[16:32][:, f[16:32].sum(0) == 0] = torch.eye(4, dtype=f.dtype).flatten()[:, None, None].repeat(1, f.shape[1], f.shape[2])[:, f[16:32].sum(0) == 0]
             f[32:][:, f[32:].sum(0) == 0] = torch.eye(4, dtype=f.dtype).flatten()[:, None, None].repeat(1, f.shape[1], f.shape[2])[:, f[32:].sum(0) == 0]
         y = mm_model(f[None])
-        y, v = y[:, 0][:, None], y[:, 1][:, None]
+        l, y, v = y[:, 0][:, None], y[:, 1][:, None], y[:, 2][:, None]
         rgb = cmap((y/y.max()).squeeze().numpy())
 
         # unrotated
         y_orig = mm_model(F[None]).squeeze().numpy()
-        y_orig, v_orig = y_orig[0], y_orig[1]
+        l_orig, y_orig, v_orig = y_orig[0], y_orig[1], y_orig[2]
         #y_orig = cmap((y_orig/y_orig.max()))
         ys.append(y_orig)
         vs.append(v_orig)
+        ls.append(l_orig)
 
         if i > 0 and random_idx > 0:
             mask = (m*v*vs[-random_idx-1]).squeeze().numpy()
-            diff = mask * (y.squeeze().numpy() - ys[-random_idx-1]) #/180*np.pi
+            if 'linr' in mm_model.feature_keys: mask = mask * (ls[-random_idx-1] > np.percentile(ls[-random_idx-1], 50))
+            yd1 = (180-y.squeeze().numpy()) - ys[-random_idx-1]
+            yd2 = y.squeeze().numpy() - ys[-random_idx-1]
+            diff = mask * np.minimum(abs(yd1), abs(yd2)) #/180*np.pi
             errs.extend(diff)
             if plot_opt:
                 fig, axs = plt.subplots(1, 4, figsize=(15, 8))
