@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 from mm.models import MuellerMatrixModel
 from mm.utils.cod import read_cod_data_X3D
-from augmentations.rotation_raw import RandomPolarRotation
+from rotation_raw import RandomPolarRotation
 
 if __name__ == '__main__':
 
