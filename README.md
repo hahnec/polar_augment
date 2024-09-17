@@ -25,6 +25,8 @@ $ bash install.sh
 
 ### Usage
 
+The provided transforms expect the image dimensions to be in PyTorch style `CxHxW`.
+
 ```python
 
 import torch
