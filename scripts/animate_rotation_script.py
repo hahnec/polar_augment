@@ -11,7 +11,7 @@ from rotation_raw import RandomPolarRotation
 
 if __name__ == '__main__':
 
-    base_dir = Path('/media/chris/EB62-383C/CC_Rotation/')
+    base_dir = Path('/home/chris/Datasets/03_HORAO/CC_Rotation/')
     plot_opt = False
     save_opt = True
     skip_opt = False
