@@ -72,15 +72,11 @@ if __name__ == '__main__':
         ax.set_xlim(0, width)
         ax.set_ylim(height, 0)  # invert y-axis for image coordinates
 
-        # Draw the coordinate system (axes through the center of the image)
-        #ax.axhline(y=height//2, color='white', linestyle='--', lw=2)  # Horizontal line (y-axis)
-        #ax.axvline(x=width//2, color='white', linestyle='--', lw=2)  # Vertical line (x-axis)
-
         # Add arrows for axes using annotate
         ax.annotate('', xy=(width, height//2), xytext=(0, height//2),
-                    arrowprops=dict(facecolor='white', edgecolor='white', shrink=0.05, width=4))
-        ax.annotate('', xy=(width//2, 0), xytext=(width//2, height),
-                    arrowprops=dict(facecolor='white', edgecolor='white', shrink=0.05, width=4))
+                    arrowprops=dict(facecolor='white', edgecolor='white', shrink=0.05, width=4, headwidth=32, headlength=40))
+        ax.annotate('', xy=(width//2, 0), xytext=(width//2, height), 
+                    arrowprops=dict(facecolor='white', edgecolor='white', shrink=0.05, width=4, headwidth=32, headlength=40))
         
         # draw labels
         gap = 30
