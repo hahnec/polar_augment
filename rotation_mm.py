@@ -91,10 +91,11 @@ class RandomMuellerRotation(object):
             angle = self.get_params(self.degrees) if angle is None else angle
             fill16 = torch.eye(4).flatten().tolist()
             rotated_img = F.rotate(img, angle, self.resample, self.expand, self.center, fill16)
+            rotated_img = rotated_img.moveaxis(0, 2)
             # mueller matrix transformation
             P = self.get_rmat(angle)
-            rotated_img = P @ rotated_img.view(*rotated_img.shape[1:], 4, 4) @ P.transpose(-2, -1)
-            rotated_img = rotated_img.flatten(-2, -1)
+            rotated_img = P @ rotated_img.view(*rotated_img.shape[:-1], 4, 4) @ P.transpose(-2, -1)
+            rotated_img = rotated_img.flatten(-2, -1).moveaxis(2, 0)
             if label is not None:
                 rotated_label = F.rotate(label, angle, self.resample, self.expand, self.center, self.fill)
                 return rotated_img, rotated_label

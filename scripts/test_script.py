@@ -1,31 +1,44 @@
 import torch
 
-# direct application
-from rotation_mm import RandomMuellerRotation
-rotate = RandomMuellerRotation(degrees=45, p=float('inf'))
 mm_img = torch.randn([128, 128, 4, 4]).flatten(2, 3).permute(2, 0, 1)
-mm_img_rotated = rotate(mm_img)
+rw_img = torch.randn([128, 128, 4*3, 4]).flatten(2, 3).permute(2, 0, 1)
 
-print(mm_img_rotated.shape)
+# direct application of rotation
+from rotation_mm import RandomMuellerRotation
+augment = RandomMuellerRotation(degrees=45, p=float('inf'))
+mm_img_augment = augment(mm_img)
+assert mm_img.shape == mm_img_augment.shape
 
 import matplotlib.pyplot as plt
 plt.figure()
 plt.imshow(mm_img.mean(0))
 plt.show()
 plt.figure()
-plt.imshow(mm_img_rotated.mean(0))
+plt.imshow(mm_img_augment.mean(0))
 plt.show()
 
-# calibration approach
+# direct application of flipping
+from flip_mm import RandomMuellerFlip
+augment = RandomMuellerFlip(orientation=1, p=float('inf'))
+mm_img_augment = augment(mm_img)
+assert mm_img.shape == mm_img_augment.shape
+
+# calibration approach of rotation
 from rotation_raw import RandomPolarRotation
-rotate = RandomPolarRotation(degrees=45, p=float('inf'))
-mm_img = torch.randn([128, 128, 4*3, 4]).flatten(2, 3).permute(2, 0, 1)
-mm_img_rotated = rotate(mm_img)
+augment = RandomPolarRotation(degrees=45, p=float('inf'))
+rw_img_augment = augment(rw_img)
+assert rw_img.shape == rw_img_augment.shape
 
 import matplotlib.pyplot as plt
 plt.figure()
-plt.imshow(mm_img.mean(0))
+plt.imshow(rw_img.mean(0))
 plt.show()
 plt.figure()
-plt.imshow(mm_img_rotated.mean(0))
+plt.imshow(rw_img_augment.mean(0))
 plt.show()
+
+# calibration approach of flipping
+from flip_raw import RandomPolarFlip
+augment = RandomPolarFlip(orientation=2, p=float('inf'))
+rw_img_augment = augment(rw_img)
+assert rw_img.shape == rw_img_augment.shape
