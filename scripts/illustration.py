@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy.ndimage
 
-plt.rc('text', usetex=False)
+plt.rc('text', usetex=True)
 plt.rc('text.latex')
 
 if __name__ == '__main__':
@@ -74,14 +74,14 @@ if __name__ == '__main__':
 
         # Add arrows for axes using annotate
         ax.annotate('', xy=(width, height//2), xytext=(0, height//2),
-                    arrowprops=dict(facecolor='white', edgecolor='white', shrink=0.05, width=4, headwidth=32, headlength=40))
+                    arrowprops=dict(facecolor='white', edgecolor='white', shrink=0.05, width=6, headwidth=40, headlength=40))
         ax.annotate('', xy=(width//2, 0), xytext=(width//2, height), 
-                    arrowprops=dict(facecolor='white', edgecolor='white', shrink=0.05, width=4, headwidth=32, headlength=40))
+                    arrowprops=dict(facecolor='white', edgecolor='white', shrink=0.05, width=6, headwidth=40, headlength=40))
         
         # draw labels
-        gap = 30
-        ax.annotate(r'$p_x$', xy=(width-gap, height//2+gap), color='white', fontsize=86)
-        ax.annotate(r'$p_y$', xy=(width//2-gap, gap), color='white', fontsize=86)
+        gap = 40
+        ax.annotate(r'$p_x$', xy=(width-gap, height//2+gap//4*3), color='white', fontsize=128*1.25)
+        ax.annotate(r'$p_y$', xy=(width//2-gap, gap//4*3), color='white', fontsize=128*1.25)
 
         # Optional: Add grid lines (example at intervals of 50 pixels)
         x_ticks = np.arange(0, width, 50)
