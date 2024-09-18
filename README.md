@@ -6,9 +6,9 @@ This repository provides polarimetric image augmentations such as an [SO(2) rota
 
 ## Example showing polarimetric azimuth maps after SO(2) rotation
 
-| ![RotationAnimation](docs/animation_with_alpha_wo.gif) | ![RotationAnimation](docs/animation_with_alpha_rect.gif) |
-|:--------------------------:|:--------------------------:|
-| **spatial-only rotation** | **spatial + polarimetric rotation** |
+| ![RotationAnimation](docs/animation_with_alpha_wo.gif) | ![RotationAnimation](docs/animation_with_alpha_rect.gif) | ![GT](docs/gt.png) |
+|:--------------------------:|:--------------------------:|:--------------------------:|
+| **spatial-only rotation** | **spatial + polarimetric rotation** | **ground truth** |
 
 <br>
 <p align="center">
