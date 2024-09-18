@@ -178,3 +178,4 @@ artifacts/
 dl_wandb/
 configs/keys.yml
 *.png
+docs/polar_states*
