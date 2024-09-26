@@ -79,7 +79,7 @@ if __name__ == '__main__':
                     arrowprops=dict(facecolor='white', edgecolor='white', shrink=0.05, width=6, headwidth=40, headlength=40))
         
         # draw labels
-        gap = 40
+        gap = 50
         ax.annotate(r'$p_x$', xy=(width-gap, height//2+gap//4*3), color='white', fontsize=128*1.25)
         ax.annotate(r'$p_y$', xy=(width//2-gap, gap//4*3), color='white', fontsize=128*1.25)
 
