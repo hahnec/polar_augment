@@ -61,8 +61,8 @@ class RandomMuellerFlip(object):
             frame = frame.reshape(shape)
             if transpose: frame = frame.transpose(-2, -1)
             # mueller matrix transformation: A_theta = (R_theta @ A_inv)_inv since R_theta @ M @ R_-theta = R_theta @ A_inv @ I @ W_inv @ R_-theta
-            P = self.get_fmat().to(frame.dtype)
-            frame = P @ frame @ P.transpose(-2, -1)
+            T = self.get_fmat().to(frame.dtype)
+            frame = T @ frame @ T.transpose(-2, -1)
             # HxWx4 to HxWx16 matrix reshaping
             if transpose: frame = frame.transpose(-2, -1)
             flipped_frame = frame.flatten(-2, -1).moveaxis(-1, 0)
