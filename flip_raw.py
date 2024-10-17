@@ -68,8 +68,8 @@ class RandomPolarFlip(object):
             W[zero_idcs] = torch.eye(4, dtype=W.dtype, device=W.device)
             # mueller matrix transformation: A_theta = (R_theta @ A_inv)_inv since R_theta @ M @ R_-theta = R_theta @ A_inv @ I @ W_inv @ R_-theta
             T = self.get_fmat().to(A.dtype)
-            A = torch.linalg.inv(T @ torch.linalg.inv(A))
-            W = torch.linalg.inv(torch.linalg.inv(W) @ T.transpose(-2, -1))
+            A = A @ torch.linalg.inv(T)
+            W = T @ W
             # HxWx4 to HxWx16 matrix reshaping
             if transpose: I, A, W = [el.transpose(-2, -1) for el in [I, A, W]]
             I, A, W = [el.flatten(-2, -1).moveaxis(-1, 0) for el in [I, A, W]]
