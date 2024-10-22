@@ -23,7 +23,7 @@ class RandomPolarRotation(object):
             Origin is the upper left corner.
             Default is the center of the image.
         fill (3-tuple or int): RGB pixel fill value for area outside the rotated image.
-            If int, it is used for all channels respectively.
+            If None, it is zero for all channels respectively.
         p (float): probability threshold with which image should be rotated or left untreated instead.
         any (bool): If false, only angles [90, 180, 270] will be chosen. Otherwise, a random angle 
             within the boundaries will be generated (default).
@@ -32,7 +32,7 @@ class RandomPolarRotation(object):
 
     """
 
-    def __init__(self, degrees, resample=False, expand=False, center=None, fill=0, p=0.5, any=True):
+    def __init__(self, degrees, resample=False, expand=False, center=None, fill=None, p=0.5, any=True):
         if isinstance(degrees, numbers.Number):
             if degrees < 0:
                 raise ValueError("If degrees is a single number, it must be positive.")
@@ -112,6 +112,7 @@ class RandomPolarRotation(object):
             # stack matrices together again
             rotated_frame = torch.cat([I, A, W], dim=0)
             if label is not None:
+                if self.fill is None: self.fill = [0] * int(label.shape[0])
                 rotated_label = F.rotate(label, angle, self.resample, self.expand, self.center, fill=self.fill)
                 return rotated_frame, rotated_label
             return rotated_frame
