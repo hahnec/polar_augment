@@ -52,6 +52,7 @@ Alternatively, the transforms can be integrated during dataloading as for exampl
 from torchvision.transforms import ToTensor
 from polar_augment.flip_raw import RandomPolarFlip
 from polar_augment.rotation_raw import RandomPolarRotation
+from polar_dataset import PolarimetryDataset
 
 # define list of transforms
 transforms = [
@@ -67,11 +68,24 @@ PolarimetryDataset(some_file_path, transforms=transforms)
 
 ```
 
-where the augmentation can then be applied to frames and labels within the dataset
+where the augmentation can then be applied to frames and labels within the ```PolarimetryDataset```
 
 ```python
 
-for transform in self.transforms:
-    frames, labels = transform(frames, label=labels)
+class PolarimetryDataset(Dataset):
+    def __init__(
+            self, 
+            path, 
+            transforms=[], 
+        ):
+        self.transforms = transforms
+
+    def __getitem__(self, i):
+
+        frame = load_file(self.frame_paths[i])
+        label = load_file(self.label_paths[i])
+
+        for transform in self.transforms:
+            frame, label = transform(frame, label=label)
 
 ```
