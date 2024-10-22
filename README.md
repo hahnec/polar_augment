@@ -78,6 +78,7 @@ class PolarimetryDataset(Dataset):
             path, 
             transforms=[], 
         ):
+        self.load_file_paths(path)
         self.transforms = transforms
 
     def __getitem__(self, i):
