@@ -3,8 +3,8 @@ import random
 import numbers
 
 
-class RandomPolarFlip(object):
-    """Flip the raw polarimetry instrument data by orientation.
+class RandomMuellerFlip(object):
+    """Flip the Mueller matrix frame by orientation.
 
     Args:
         orientation (int): Number indicating horizontal (0), vertical (1), or both directions (2).
@@ -56,25 +56,17 @@ class RandomPolarFlip(object):
         if random.random() < self.p:
             # spatial transformation
             frame = self.flip_img(frame).moveaxis(0, -1)
-            # unravel matrices
-            I, A, W = frame[..., :16], frame[..., 16:32], frame[..., 32:]
             # HxWx16 to HxWx4x4 matrix reshaping
-            shape = (*A.shape[:-1], 4, 4)
-            zero_idcs = torch.all(A==torch.zeros_like(A), dim=-1)
-            I, A, W = [el.reshape(shape) for el in [I, A, W]]
-            if transpose: I, A, W = [el.transpose(-2, -1) for el in [I, A, W]]
-            # replace zeros with identity matrices to make A and W invertible
-            A[zero_idcs] = torch.eye(4, dtype=A.dtype, device=A.device)
-            W[zero_idcs] = torch.eye(4, dtype=W.dtype, device=W.device)
+            shape = (*frame.shape[:-1], 4, 4)
+            frame = frame.reshape(shape)
+            if transpose: frame = frame.transpose(-2, -1)
             # mueller matrix transformation: A_theta = (R_theta @ A_inv)_inv since R_theta @ M @ R_-theta = R_theta @ A_inv @ I @ W_inv @ R_-theta
-            P = self.get_fmat().to(A.dtype)
-            A = torch.linalg.inv(P @ torch.linalg.inv(A))
-            W = torch.linalg.inv(torch.linalg.inv(W) @ P.transpose(-2, -1))
+            T = self.get_fmat().to(frame.dtype)
+            frame = T @ frame @ T.transpose(-2, -1)
             # HxWx4 to HxWx16 matrix reshaping
-            if transpose: I, A, W = [el.transpose(-2, -1) for el in [I, A, W]]
-            I, A, W = [el.flatten(-2, -1).moveaxis(-1, 0) for el in [I, A, W]]
+            if transpose: frame = frame.transpose(-2, -1)
+            flipped_frame = frame.flatten(-2, -1).moveaxis(-1, 0)
             # stack matrices together again
-            flipped_frame = torch.cat([I, A, W], dim=0)
             if label is not None:
                 flipped_label = self.flip_img(label)
                 return flipped_frame, flipped_label

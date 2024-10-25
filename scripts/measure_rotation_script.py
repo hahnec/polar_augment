@@ -3,7 +3,7 @@ import pickle
 from skimage import transform, filters
 from scipy.optimize import leastsq
 
-base_dir = Path('/media/chris/EB62-383C/CC_Rotation/')
+base_dir = Path('/home/chris/Datasets/03_HORAO/CC_Rotation/')
 plot_opt = False
 object_fun = lambda deg, px, py, x, ref: (transform.rotate(x, deg, center=(px, py), mode='edge')[s:-s, s+c:-s-c] - ref).flatten()**2
 
