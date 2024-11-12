@@ -24,8 +24,10 @@ class GammaAugmentation:
         # Randomly choose a gamma value within the specified range
         gamma = torch.empty(1).uniform_(self.gamma_range[0], self.gamma_range[1]).item()
         
-        # Apply gamma correction: image' = image ^ gamma
-        return torch.pow(image, gamma)
+        # Apply symmetric gamma correction: image' = image ^ gamma
+        image = torch.sign(image) * torch.abs(image).clamp(min=1e-8).pow(gamma)
+        
+        return image
 
     def __call__(self, image, label=None):
         """
