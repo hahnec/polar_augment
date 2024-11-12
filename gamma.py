@@ -1,5 +1,4 @@
-import cv2
-import numpy as np
+import torch
 
 class GammaAugmentation:
     def __init__(self, gamma_range=(0.5, 2.0)):
@@ -12,36 +11,30 @@ class GammaAugmentation:
         """
         self.gamma_range = gamma_range
 
-    def apply(self, image, label=None):
+    def apply(self, image):
         """
         Apply gamma augmentation to the given image.
         
         Parameters:
-        image (numpy.ndarray): Input image to augment.
+        image (torch.Tensor): Input image tensor to augment, with pixel values in [0, 1].
         
         Returns:
-        (numpy.ndarray, Any): Gamma-corrected image, label
+        torch.Tensor: Gamma-corrected image tensor.
         """
         # Randomly choose a gamma value within the specified range
-        gamma = np.random.uniform(self.gamma_range[0], self.gamma_range[1])
+        gamma = torch.empty(1).uniform_(self.gamma_range[0], self.gamma_range[1]).item()
         
-        # Build a lookup table mapping pixel values [0, 255] to their adjusted gamma values
-        inv_gamma = 1.0 / gamma
-        table = np.array([(i / 255.0) ** inv_gamma * 255 for i in range(256)]).astype("uint8")
-        
-        # Apply gamma correction using the lookup table
-        image = cv2.LUT(image, table)
-
-        return image, label
+        # Apply gamma correction: image' = image ^ gamma
+        return torch.pow(image, gamma)
 
     def __call__(self, image, label=None):
         """
         Callable interface for applying the gamma augmentation.
         
         Parameters:
-        image (numpy.ndarray): Input image to augment.
+        image (torch.Tensor): Input image tensor to augment, with pixel values in [0, 1].
         
         Returns:
-        numpy.ndarray: Gamma-corrected image.
+        torch.Tensor: Gamma-corrected image tensor.
         """
-        return self.apply(image, label)
+        return self.apply(image), label
