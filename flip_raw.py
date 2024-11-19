@@ -60,12 +60,8 @@ class RandomPolarFlip(object):
             I, A, W = frame[..., :16], frame[..., 16:32], frame[..., 32:]
             # HxWx16 to HxWx4x4 matrix reshaping
             shape = (*A.shape[:-1], 4, 4)
-            zero_idcs = torch.all(A==torch.zeros_like(A), dim=-1)
             I, A, W = [el.reshape(shape) for el in [I, A, W]]
             if transpose: I, A, W = [el.transpose(-2, -1) for el in [I, A, W]]
-            # replace zeros with identity matrices to make A and W invertible
-            A[zero_idcs] = torch.eye(4, dtype=A.dtype, device=A.device)
-            W[zero_idcs] = torch.eye(4, dtype=W.dtype, device=W.device)
             # mueller matrix transformation: A_theta = (R_theta @ A_inv)_inv since R_theta @ M @ R_-theta = R_theta @ A_inv @ I @ W_inv @ R_-theta
             T = self.get_fmat().to(A.dtype)
             A = A @ torch.linalg.inv(T)
