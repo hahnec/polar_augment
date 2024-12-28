@@ -2,7 +2,7 @@
 
 ## Description
 
-This repository provides polarimetric image augmentations such as an [SO(2) rotation](simulate_rotation_script.py).
+This repository provides polarimetric image augmentations such as an [SO(2) rotation](https://github.com/hahnec/polar_augment/blob/master/scripts/simulate_rotation_script.py).
 
 ## Example showing polarimetric azimuth maps after SO(2) rotation
 
