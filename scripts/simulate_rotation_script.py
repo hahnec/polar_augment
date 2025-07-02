@@ -86,10 +86,10 @@ if __name__ == '__main__':
 
         if i > 0 and random_idx > 0:
             mask = (m*v*vs[-random_idx-1]).squeeze().numpy()
-            if 'linr' in mm_model.feature_keys: mask = mask * (ls[-random_idx-1] > np.percentile(ls[-random_idx-1], 50))
+            if 'linr' in mm_model.feature_keys: mask = mask * (ls[-random_idx-1] > np.percentile(ls[-random_idx-1], 75))
             yd1 = (180-y.squeeze().numpy()) - ys[-random_idx-1]
             yd2 = y.squeeze().numpy() - ys[-random_idx-1]
-            diff = mask * np.minimum(abs(yd1), abs(yd2)) #/180*np.pi
+            diff = np.minimum(abs(yd1), abs(yd2))[mask.astype(bool)]
             errs.extend(diff)
             if plot_opt:
                 fig, axs = plt.subplots(1, 4, figsize=(15, 8))
