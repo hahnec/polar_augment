@@ -5,9 +5,10 @@ import imageio
 import numpy as np
 import matplotlib.pyplot as plt
 
-from mm.models import MuellerMatrixModel
+from mm.models import LuChipmanModel
 from mm.utils.cod import read_cod_data_X3D
 from rotation_raw import RandomPolarRotation
+from padding import mirror_rotate
 
 if __name__ == '__main__':
 
@@ -33,8 +34,8 @@ if __name__ == '__main__':
     pseudo_label = torch.ones([1, A.shape[0], A.shape[1]]) # create pseudo label to generate a mask (e.g., for bg removal)
 
     # instantiate models
-    mm_model = MuellerMatrixModel(feature_keys=['azimuth', 'linr', 'mask'], wnum=1)
-    mueller_rotate = RandomPolarRotation(degrees=180, p=float('inf'))
+    mm_model = LuChipmanModel(feature_keys=['linr', 'azimuth', 'mask'], wnum=1, norm_mueller=1, norm_opt=0, filter_opt=False)
+    mueller_rotate = RandomPolarRotation(degrees=180, p=float('inf'), pad_rotate=mirror_rotate)
     rotate = lambda x, angle, center: mueller_rotate.__call__(x, angle=angle, center=center, label=pseudo_label, transpose=True)
     if skip_opt: rotate = torchvision.transforms.functional.rotate
 
