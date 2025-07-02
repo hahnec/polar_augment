@@ -46,7 +46,8 @@ import torch
 
 # direct application
 from polar_augment.rotation_mm import RandomMuellerRotation
-rotate = RandomMuellerRotation(degrees=45, p=float('inf'))
+from polar_augment.padding import mirror_rotate
+rotate = RandomMuellerRotation(degrees=45, p=float('inf'), pad_rotate=mirror_rotate)
 mm_img = torch.randn([128, 128, 4, 4]).flatten(2, 3).permute(2, 0, 1)
 mm_img_rotated = rotate(mm_img)
 print(mm_img_rotated.shape)
