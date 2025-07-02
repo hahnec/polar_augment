@@ -44,9 +44,10 @@ The provided transforms expect the image dimensions to be in PyTorch style `CxHx
 ```python
 import torch
 
+from polar_augment.padding import mirror_rotate
+
 # direct application
 from polar_augment.rotation_mm import RandomMuellerRotation
-from polar_augment.padding import mirror_rotate
 rotate = RandomMuellerRotation(degrees=45, p=float('inf'), pad_rotate=mirror_rotate)
 mm_img = torch.randn([128, 128, 4, 4]).flatten(2, 3).permute(2, 0, 1)
 mm_img_rotated = rotate(mm_img)
@@ -54,7 +55,7 @@ print(mm_img_rotated.shape)
 
 # application for calibration matrices (dataloader-friendly for raw data)
 from polar_augment.rotation_raw import RandomPolarRotation
-rotate = RandomPolarRotation(degrees=45, p=float('inf'))
+rotate = RandomPolarRotation(degrees=45, p=float('inf'), pad_rotate=mirror_rotate)
 mm_img = torch.randn([128, 128, 4*3, 4]).flatten(2, 3).permute(2, 0, 1)
 mm_img_rotated = rotate(mm_img)
 print(mm_img_rotated.shape)
@@ -67,12 +68,13 @@ Alternatively, the transforms can be integrated during dataloading as for exampl
 from torchvision.transforms import ToTensor
 from polar_augment.flip_raw import RandomPolarFlip
 from polar_augment.rotation_raw import RandomPolarRotation
+from polar_augment.padding import mirror_rotate
 from polar_dataset import PolarimetryDataset
 
 # define list of transforms
 transforms = [
         ToTensor(), 
-        RandomPolarRotation(degrees=180, p=.5), # rotation
+        RandomPolarRotation(degrees=180, p=.5, pad_rotate=mirror_rotate), # rotation
         RandomPolarFlip(orientation=0, p=.5),   # horizontal flip
         RandomPolarFlip(orientation=1, p=.5),   # vertical flip
         RandomPolarFlip(orientation=2, p=.5),   # combined horizontal and vertical flip
