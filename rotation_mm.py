@@ -32,7 +32,7 @@ class RandomMuellerRotation(object):
 
     """
 
-    def __init__(self, degrees, resample=False, expand=False, center=None, fill=0, p=0.5, any=True):
+    def __init__(self, degrees, resample=False, expand=False, center=None, pad_rotate=None, fill=0, p=0.5, any=True):
         if isinstance(degrees, numbers.Number):
             if degrees < 0:
                 raise ValueError("If degrees is a single number, it must be positive.")
@@ -45,6 +45,7 @@ class RandomMuellerRotation(object):
         self.resample = resample
         self.expand = expand
         self.center = center
+        self.pad_rotate = pad_rotate
         self.fill = fill
         self.p = p
         self.any = any
@@ -77,7 +78,7 @@ class RandomMuellerRotation(object):
 
         return rmat
 
-    def __call__(self, img, label=None, angle=None, center=None, pad_rotate=None, *args, **kwargs):
+    def __call__(self, img, label=None, angle=None, center=None, *args, **kwargs):
         """
         Args:
             img (PIL Image): Image to be rotated.
@@ -90,7 +91,7 @@ class RandomMuellerRotation(object):
             # spatial transformation
             angle = self.get_params(self.degrees) if angle is None else angle
             self.center = self.center if center is None else center
-            if pad_rotate is None:
+            if self.pad_rotate is None:
                 fill16 = torch.eye(4).flatten().tolist()
                 rotated_img = F.rotate(img, angle, interpolation=self.resample, expand=self.expand, center=self.center, fill=fill16)
             else:
