@@ -24,6 +24,7 @@ def mirror_rotate(frame, angle, center=None, interpolation=False, expand=False):
     """
     C, H, W = frame.shape
     pad_h, pad_w = H, W  # pad one full image in each direction
+    if center is None: center = [W/2, H/2]
 
     # Manually wrap-pad the image
     padded = mirror_pad(frame, pad_h, pad_w)
