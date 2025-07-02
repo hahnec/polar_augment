@@ -4,7 +4,6 @@ import random
 import numbers
 import torchvision.transforms.functional as F
 
-from padding import mirror_rotate
 
 class RandomMuellerRotation(object):
     """Rotate the Mueller matrix frame by angle.
@@ -78,7 +77,7 @@ class RandomMuellerRotation(object):
 
         return rmat
 
-    def __call__(self, img, label=None, angle=None, *args, **kwargs):
+    def __call__(self, img, label=None, angle=None, center=None, pad_rotate=None, *args, **kwargs):
         """
         Args:
             img (PIL Image): Image to be rotated.
@@ -90,8 +89,12 @@ class RandomMuellerRotation(object):
         if random.random() < self.p:
             # spatial transformation
             angle = self.get_params(self.degrees) if angle is None else angle
-            fill16 = torch.eye(4).flatten().tolist()
-            rotated_img = F.rotate(img, angle, self.resample, self.expand, self.center, fill16)
+            self.center = self.center if center is None else center
+            if pad_rotate is None:
+                fill16 = torch.eye(4).flatten().tolist()
+                rotated_img = F.rotate(img, angle, interpolation=self.resample, expand=self.expand, center=self.center, fill=fill16)
+            else:
+                rotated_img = pad_rotate(img, angle, interpolation=self.resample, expand=self.expand, center=self.center)
             rotated_img = rotated_img.moveaxis(0, 2)
             # mueller matrix transformation
             T = self.get_rmat(angle)
