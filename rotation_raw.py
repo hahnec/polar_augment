@@ -95,7 +95,7 @@ class RandomPolarRotation(object):
                 fill48 = torch.stack([torch.eye(4) for _ in range(3)]).flatten().tolist()
                 frame = F.rotate(frame, angle, interpolation=self.resample, expand=self.expand, center=self.center, fill=fill48)
             else:
-                frame = pad_rotate(frame, angle, interpolation=self.resample, expand=self.expand, center=self.center)
+                frame = self.pad_rotate(frame, angle, interpolation=self.resample, expand=self.expand, center=self.center)
             frame = frame.moveaxis(0, -1)
             # unravel matrices
             I, A, W = frame[..., :16], frame[..., 16:32], frame[..., 32:]

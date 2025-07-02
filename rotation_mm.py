@@ -95,7 +95,7 @@ class RandomMuellerRotation(object):
                 fill16 = torch.eye(4).flatten().tolist()
                 rotated_img = F.rotate(img, angle, interpolation=self.resample, expand=self.expand, center=self.center, fill=fill16)
             else:
-                rotated_img = pad_rotate(img, angle, interpolation=self.resample, expand=self.expand, center=self.center)
+                rotated_img = self.pad_rotate(img, angle, interpolation=self.resample, expand=self.expand, center=self.center)
             rotated_img = rotated_img.moveaxis(0, 2)
             # mueller matrix transformation
             T = self.get_rmat(angle)
