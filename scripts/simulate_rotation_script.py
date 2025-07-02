@@ -15,6 +15,9 @@ if __name__ == '__main__':
     plot_opt = True
     save_opt = False
     skip_opt = False
+    offset_method = False
+
+    if offset_method: skip_opt = True
 
     np.random.seed(3008)
 
@@ -65,6 +68,11 @@ if __name__ == '__main__':
             f[32:][:, f[32:].sum(0) == 0] = torch.eye(4, dtype=f.dtype).flatten()[:, None, None].repeat(1, f.shape[1], f.shape[2])[:, f[32:].sum(0) == 0]
         y = mm_model(f[None])
         l, y, v = y[:, 0][:, None], y[:, 1][:, None], y[:, 2][:, None]
+
+        if offset_method and angle != 0: 
+            y = (y + angle) % 180
+            y[y<0] = 180 + y[y<0]
+
         rgb = cmap((y/y.max()).squeeze().numpy())
 
         # unrotated
