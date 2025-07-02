@@ -4,6 +4,7 @@ import random
 import numbers
 import torchvision.transforms.functional as F
 
+from padding import mirror_rotate
 
 class RandomMuellerRotation(object):
     """Rotate the Mueller matrix frame by angle.

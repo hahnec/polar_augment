@@ -3,6 +3,7 @@ import torch
 
 mm_img = torch.randn([388, 516, 4, 4]).flatten(2, 3).permute(2, 0, 1)
 rw_img = torch.randn([388, 516, 4*3, 4]).flatten(2, 3).permute(2, 0, 1)
+center = [258, 194]
 
 times = []
 iter_num = 50
@@ -10,10 +11,10 @@ plot_opt = False
 
 # direct application of rotation
 from rotation_mm import RandomMuellerRotation
-augment = RandomMuellerRotation(degrees=45, p=float('inf'))
+augment = RandomMuellerRotation(degrees=45, p=float('inf'), center=center)
 for i in range(iter_num):
     start = time.perf_counter()
-    mm_img_augment = augment(mm_img)
+    mm_img_augment = augment(mm_img, method=None)
     times.append(time.perf_counter()-start)
 assert mm_img.shape == mm_img_augment.shape
 
@@ -43,10 +44,10 @@ times = []
 
 # calibration approach of rotation
 from rotation_raw import RandomPolarRotation
-augment = RandomPolarRotation(degrees=45, p=float('inf'))
+augment = RandomPolarRotation(degrees=45, p=float('inf'), center=center)
 for i in range(iter_num):
     start = time.perf_counter()
-    rw_img_augment = augment(rw_img)
+    rw_img_augment = augment(rw_img, method=None)
     times.append(time.perf_counter()-start)
 assert rw_img.shape == rw_img_augment.shape
 

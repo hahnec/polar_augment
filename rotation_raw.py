@@ -3,6 +3,9 @@ import torch
 import random
 import numbers
 import torchvision.transforms.functional as F
+from torchvision.transforms import InterpolationMode
+
+from padding import mirror_rotate
 
 
 class RandomPolarRotation(object):
@@ -77,7 +80,7 @@ class RandomPolarRotation(object):
 
         return rmat
 
-    def __call__(self, frame, label=None, transpose=True, angle=None, center=None, *args, **kwargs):
+    def __call__(self, frame, label=None, transpose=True, angle=None, center=None, method='mirror', *args, **kwargs):
         """
         Args:
             img (PIL Image): Image to be rotated.
@@ -90,8 +93,12 @@ class RandomPolarRotation(object):
             # spatial transformation
             angle = self.get_params(self.degrees) if angle is None else angle
             self.center = self.center if center is None else center
-            fill48 = torch.stack([torch.eye(4) for _ in range(3)]).flatten().tolist()
-            frame = F.rotate(frame, angle, self.resample, self.expand, self.center, fill=fill48).moveaxis(0, -1)
+            if method == 'mirror':
+                frame = mirror_rotate(frame, angle, interpolation=self.resample, expand=self.expand, center=self.center)
+            else:
+                fill48 = torch.stack([torch.eye(4) for _ in range(3)]).flatten().tolist()
+                frame = F.rotate(frame, angle, interpolation=self.resample, expand=self.expand, center=self.center, fill=fill48)
+            frame = frame.moveaxis(0, -1)
             # unravel matrices
             I, A, W = frame[..., :16], frame[..., 16:32], frame[..., 32:]
             # HxWx16 to HxWx4x4 matrix reshaping
@@ -113,7 +120,7 @@ class RandomPolarRotation(object):
             rotated_frame = torch.cat([I, A, W], dim=0)
             if label is not None:
                 if self.fill is None: self.fill = [0] * int(label.shape[0])
-                rotated_label = F.rotate(label, angle, self.resample, self.expand, self.center, fill=self.fill)
+                rotated_label = F.rotate(label, angle, interpolation=self.resample, expand=self.expand, center=self.center, fill=self.fill)
                 return rotated_frame, rotated_label
             return rotated_frame
         else:
