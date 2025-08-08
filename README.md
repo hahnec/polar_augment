@@ -19,7 +19,7 @@ This repository provides polarimetric image augmentations such as an [SO(2) rota
 
 ## Citation
 
-<pre>@misc{hahne2024isometrictransformationsimageaugmentation,
+<pre>@misc{hahne:2024:polar_augment,
       title={Physically Consistent Image Augmentation for Deep Learning in Mueller Matrix Polarimetry}, 
       author={Christopher Hahne and Omar Rodriguez-Nunez and Éléa Gros and Théotim Lucas and Ekkehard Hewer and Tatiana Novikova and Theoni Maragkou and Philippe Schucht and Richard McKinley},
       year={2024},
