@@ -13,7 +13,7 @@ This repository provides polarimetric image augmentations such as an [SO(2) rota
 | **spatial-only rotation** | **spatial + polarimetric rotation** | **ground truth** |
 
 <br>
-<p align="center">
+<p align="center" style="background-color: white;>
   <img src="docs/color_bar.svg" alt="Colorbar" width="33%" />
 </p>
 
