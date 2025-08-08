@@ -10,7 +10,7 @@ fig.subplots_adjust(bottom=0.5)
 cmap = plt.cm.twilight_shifted
 norm = plt.Normalize(vmin=0, vmax=180)
 cb1 = plt.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=cmap),
-                   cax=ax, orientation='horizontal', label='Azimuth $\\varphi_i$ [deg]')
+                   cax=ax, orientation='horizontal', label='Azimuth $\\varphi_i$ [$^{\circ}$]')
 
 #cb1.set_label('Azimuth $\\varphi_i$ [deg]', fontsize=18)
 #cb1.ax.tick_params(labelsize=12)

@@ -20,7 +20,7 @@ This repository provides polarimetric image augmentations such as an [SO(2) rota
 ## Citation
 
 <pre>@misc{hahne2024isometrictransformationsimageaugmentation,
-      title={Isometric Transformations for Image Augmentation in Mueller Matrix Polarimetry}, 
+      title={Physically Consistent Image Augmentation for Deep Learning in Mueller Matrix Polarimetry}, 
       author={Christopher Hahne and Omar Rodriguez-Nunez and Éléa Gros and Théotim Lucas and Ekkehard Hewer and Tatiana Novikova and Theoni Maragkou and Philippe Schucht and Richard McKinley},
       year={2024},
       eprint={2411.07918},
@@ -44,16 +44,18 @@ The provided transforms expect the image dimensions to be in PyTorch style `CxHx
 ```python
 import torch
 
+from polar_augment.padding import mirror_rotate
+
 # direct application
 from polar_augment.rotation_mm import RandomMuellerRotation
-rotate = RandomMuellerRotation(degrees=45, p=float('inf'))
+rotate = RandomMuellerRotation(degrees=45, p=float('inf'), pad_rotate=mirror_rotate)
 mm_img = torch.randn([128, 128, 4, 4]).flatten(2, 3).permute(2, 0, 1)
 mm_img_rotated = rotate(mm_img)
 print(mm_img_rotated.shape)
 
 # application for calibration matrices (dataloader-friendly for raw data)
 from polar_augment.rotation_raw import RandomPolarRotation
-rotate = RandomPolarRotation(degrees=45, p=float('inf'))
+rotate = RandomPolarRotation(degrees=45, p=float('inf'), pad_rotate=mirror_rotate)
 mm_img = torch.randn([128, 128, 4*3, 4]).flatten(2, 3).permute(2, 0, 1)
 mm_img_rotated = rotate(mm_img)
 print(mm_img_rotated.shape)
@@ -66,12 +68,13 @@ Alternatively, the transforms can be integrated during dataloading as for exampl
 from torchvision.transforms import ToTensor
 from polar_augment.flip_raw import RandomPolarFlip
 from polar_augment.rotation_raw import RandomPolarRotation
+from polar_augment.padding import mirror_rotate
 from polar_dataset import PolarimetryDataset
 
 # define list of transforms
 transforms = [
         ToTensor(), 
-        RandomPolarRotation(degrees=180, p=.5), # rotation
+        RandomPolarRotation(degrees=180, p=.5, pad_rotate=mirror_rotate), # rotation
         RandomPolarFlip(orientation=0, p=.5),   # horizontal flip
         RandomPolarFlip(orientation=1, p=.5),   # vertical flip
         RandomPolarFlip(orientation=2, p=.5),   # combined horizontal and vertical flip

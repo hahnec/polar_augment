@@ -5,9 +5,10 @@ import imageio
 import numpy as np
 import matplotlib.pyplot as plt
 
-from mm.models import MuellerMatrixModel
+from mm.models import LuChipmanModel
 from mm.utils.cod import read_cod_data_X3D
 from rotation_raw import RandomPolarRotation
+from padding import mirror_rotate
 
 if __name__ == '__main__':
 
@@ -15,6 +16,9 @@ if __name__ == '__main__':
     plot_opt = True
     save_opt = False
     skip_opt = False
+    offset_method = False
+
+    if offset_method: skip_opt = True
 
     np.random.seed(3008)
 
@@ -30,8 +34,8 @@ if __name__ == '__main__':
     pseudo_label = torch.ones([1, A.shape[0], A.shape[1]]) # create pseudo label to generate a mask (e.g., for bg removal)
 
     # instantiate models
-    mm_model = MuellerMatrixModel(feature_keys=['azimuth', 'linr', 'mask'], wnum=1)
-    mueller_rotate = RandomPolarRotation(degrees=180, p=float('inf'))
+    mm_model = LuChipmanModel(feature_keys=['linr', 'azimuth', 'mask'], wnum=1, norm_mueller=1, norm_opt=0, filter_opt=False)
+    mueller_rotate = RandomPolarRotation(degrees=180, p=float('inf'), pad_rotate=mirror_rotate)
     rotate = lambda x, angle, center: mueller_rotate.__call__(x, angle=angle, center=center, label=pseudo_label, transpose=True)
     if skip_opt: rotate = torchvision.transforms.functional.rotate
 
@@ -65,6 +69,11 @@ if __name__ == '__main__':
             f[32:][:, f[32:].sum(0) == 0] = torch.eye(4, dtype=f.dtype).flatten()[:, None, None].repeat(1, f.shape[1], f.shape[2])[:, f[32:].sum(0) == 0]
         y = mm_model(f[None])
         l, y, v = y[:, 0][:, None], y[:, 1][:, None], y[:, 2][:, None]
+
+        if offset_method and angle != 0: 
+            y = (y + angle) % 180
+            y[y<0] = 180 + y[y<0]
+
         rgb = cmap((y/y.max()).squeeze().numpy())
 
         # unrotated
@@ -77,10 +86,10 @@ if __name__ == '__main__':
 
         if i > 0 and random_idx > 0:
             mask = (m*v*vs[-random_idx-1]).squeeze().numpy()
-            if 'linr' in mm_model.feature_keys: mask = mask * (ls[-random_idx-1] > np.percentile(ls[-random_idx-1], 50))
+            if 'linr' in mm_model.feature_keys: mask = mask * (ls[-random_idx-1] > np.percentile(ls[-random_idx-1], 75))
             yd1 = (180-y.squeeze().numpy()) - ys[-random_idx-1]
             yd2 = y.squeeze().numpy() - ys[-random_idx-1]
-            diff = mask * np.minimum(abs(yd1), abs(yd2)) #/180*np.pi
+            diff = np.minimum(abs(yd1), abs(yd2))[mask.astype(bool)]
             errs.extend(diff)
             if plot_opt:
                 fig, axs = plt.subplots(1, 4, figsize=(15, 8))
